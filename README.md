@@ -8,7 +8,4 @@
 
 ## requirements:
 
-- Install ffmpeg locally (make sure the binary works and is accessible in the PATH environemnt):
-
-  * [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html) - and follow the instructions :)
 - pip install -r requirements.txt

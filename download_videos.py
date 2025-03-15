@@ -5,7 +5,7 @@ import sys
 
 from get_download_links import get_links_file_path
 
-FFMPEG_DOWNLOAD_LINE = 'ffmpeg -i "{url}" -c copy "{name}"'
+DOWNLOAD_LINE = 'yt-dlp -N 2 -q --retry-sleep 5 -o "{name}" "{url}" '
 
 
 class DownloadVideos:
@@ -25,14 +25,11 @@ class DownloadVideos:
         self,
     ):
         processes = []
-
         for name, url in self.to_download.items():
             if not Path(self.get_filename(name)).exists():
                 processes.append(
                     subprocess.Popen(
-                        FFMPEG_DOWNLOAD_LINE.format(
-                            url=url, name=self.get_filename(name)
-                        ),
+                        DOWNLOAD_LINE.format(url=url, name=self.get_filename(name)),
                         shell=True,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
