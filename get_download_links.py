@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from selenium.webdriver.common.by import By
 
-from series import THE_BLACKLIST, Serie
+from series import *
 
 URL_TEMPLATE = "https://123series.art/series/{name}/{season}-{episode}/"
 MAX_EPISODE = 400  # more than this and you should not watch this serie
@@ -44,7 +44,9 @@ class GetVideoLinks:
             for request in self.driver.requests:
                 if "index-v1-a1.m3u8" in request.url:
                     # maybe there is more than 1?
-                    yield request.url
+                    ret = request.url
+            # I want the last one, the other are bad for your health
+            yield ret
         else:
             raise EpisodeDoesNotExist(f"{url} has no presentation of video :/")
 
