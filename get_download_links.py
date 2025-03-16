@@ -37,16 +37,26 @@ class GetVideoLinks:
     def __init__(self):
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
-    def get_download_links(self, url):
+    def get_download_link(self, url):
+        del self.driver.requests  # clean old requests.
         self.driver.get(url)
         if self.driver.find_elements(By.ID, "main-wrapper"):
-            time.sleep(3)
-            for request in self.driver.requests:
-                if "index-v1-a1.m3u8" in request.url:
-                    # maybe there is more than 1?
-                    ret = request.url
-            # I want the last one, the other are bad for your health
-            yield ret
+            try:
+                return self.driver.wait_for_request("index-v1-a1.m3u8", timeout=30).url
+            except Exception:
+                print(f"Error downloading: {url}, cChecing if other server works :/")
+                for nav in self.driver.find_element(By.ID, "list_of").find_elements(
+                    By.CLASS_NAME, "nav-item"
+                ):
+                    for _ in range(3):
+                        self.driver.execute_script("arguments[0].click();", nav)
+                        self.driver.execute_script(
+                            "arguments[0].click();",
+                            nav.find_element(By.XPATH, "//a[@href='javascript:;']"),
+                        )
+                    nav.click()
+                    time.sleep(15)
+                return self.driver.wait_for_request("index-v1-a1.m3u8", timeout=1).url
         else:
             raise EpisodeDoesNotExist(f"{url} has no presentation of video :/")
 
@@ -54,21 +64,36 @@ class GetVideoLinks:
 def get_season_links(serie: Serie, season: int, gvl: GetVideoLinks):
     for episode in range(1, MAX_EPISODE):
         try:
-            for link in gvl.get_download_links(
-                URL_TEMPLATE.format(name=serie.name, season=season, episode=episode)
-            ):
-                add_video(
-                    serie_name=serie.human_name, name=f"{season}-{episode}", url=link
-                )
-                break
-                #TODO: support more than 1 link...
+            add_video(
+                serie_name=serie.human_name,
+                name=f"{season}-{episode}",
+                url=gvl.get_download_link(
+                    URL_TEMPLATE.format(name=serie.name, season=season, episode=episode)
+                ),
+            )
         except EpisodeDoesNotExist:
             break
+        except Exception as e:
+            # Problem with specific episode, log and try the next one :)
+            print(
+                f"Error - {repr(e)}, trying to download {serie.human_name}:{season}-{episode}"
+            )
+            continue
+
+
+def download(serie):
+    # start downloading the serie
+    from download_videos import DownloadVideos
+
+    DownloadVideos(serie.human_name).start_downloads()
 
 
 if __name__ == "__main__":
-    ## run stuffs :)
+    serie = DEXTER
     gvl = GetVideoLinks()
-    for season in range(1, 10):
-        get_season_links(THE_BLACKLIST, season=season)
+    # get_season_links(gvl=gvl, serie=serie, season=7)
+    for season in range(1, 12):
+        get_season_links(gvl=gvl, serie=serie, season=season)
     gvl.driver.quit()
+
+    download(serie)
