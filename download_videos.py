@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import subprocess
 import json
@@ -5,7 +6,7 @@ import sys
 
 from get_download_links import get_links_file_path
 
-DOWNLOAD_LINE = 'yt-dlp -N 2 -q --retry-sleep 5 -o "{name}" "{url}" '
+DOWNLOAD_LINE = 'yt-dlp -f best --limit-rate 50K --concurrent-fragments 4 --buffer-size 16M --downloader aria2c --downloader-args "-x 16 -k 50K" -q -c -o "{name}" "{url}" '
 
 
 class DownloadVideos:
@@ -21,21 +22,27 @@ class DownloadVideos:
     def get_filename(self, name):
         return self.output_dir / f"{name}.mp4"
 
+    def run_command(self, cmd):
+        p = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print(f"Downloading: {cmd}")
+        p.wait()
+
     def start_downloads(
         self,
     ):
-        processes = []
-        for name, url in self.to_download.items():
-            if not Path(self.get_filename(name)).exists():
-                processes.append(
-                    subprocess.Popen(
-                        DOWNLOAD_LINE.format(url=url, name=self.get_filename(name)),
-                        shell=True,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    )
-                )
-        return processes
+        commands = [
+            DOWNLOAD_LINE.format(url=url, name=self.get_filename(name))
+            for name, url in self.to_download.items()
+            if not Path(self.get_filename(name)).exists()
+        ]
+
+        with ThreadPoolExecutor(max_workers=16) as executor:
+            executor.map(self.run_command, commands)
 
 
 if __name__ == "__main__":
