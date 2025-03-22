@@ -3,21 +3,13 @@ from seleniumwire import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import json
-from pathlib import Path
 from selenium.webdriver.common.by import By
 
+from consts import get_links_file_path
 from series import *
 
 URL_TEMPLATE = "https://123series.art/series/{name}/{season}-{episode}/"
 MAX_EPISODE = 400  # more than this and you should not watch this serie
-
-
-def get_links_file_path(serie_name):
-    path = Path(__file__).parent / "links" / f"{serie_name}.json"
-    if not path.is_file():
-        with open(path, "w") as f:
-            json.dump({}, f, indent=4)
-    return path
 
 
 def add_video(serie_name, name, url):
@@ -89,11 +81,12 @@ def download(serie):
 
 
 if __name__ == "__main__":
-    serie = DEXTER
+    # Tests:
+    serie = SUITS
     gvl = GetVideoLinks()
     # get_season_links(gvl=gvl, serie=serie, season=7)
     for season in range(1, 12):
         get_season_links(gvl=gvl, serie=serie, season=season)
     gvl.driver.quit()
 
-    download(serie)
+    # download(serie)

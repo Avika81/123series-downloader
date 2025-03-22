@@ -4,9 +4,11 @@ import subprocess
 import json
 import sys
 
-from get_download_links import get_links_file_path
+from consts import get_links_file_path
 
-DOWNLOAD_LINE = 'yt-dlp -f best --limit-rate 50K --concurrent-fragments 4 --buffer-size 16M --downloader aria2c --downloader-args "-x 16 -k 50K" -q -c -o "{name}" "{url}" '
+# DOWNLOAD_LINE = 'yt-dlp -f best --limit-rate 50K --concurrent-fragments 4 --buffer-size 16M --downloader aria2c --downloader-args "-x 16 -k 50K" -q -c -o "{name}" "{url}" '
+# DOWNLOAD_LINE = 'yt-dlp -f bestvideo+bestaudio --merge-output-format mp4 --downloader aria2c --downloader-args "aria2c:-x 16 -s 16 -k 1M" -o "{name}" "{url}"'
+DOWNLOAD_LINE = 'ffmpeg -i "{url}" -c copy "{name}"'
 
 
 class DownloadVideos:
