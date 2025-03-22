@@ -58,7 +58,7 @@ def get_season_links(serie: Serie, season: int, gvl: GetVideoLinks):
         try:
             add_video(
                 serie_name=serie.human_name,
-                name=f"{season}-{episode}",
+                name=f"{season:02}-{episode:02}",
                 url=gvl.get_download_link(
                     URL_TEMPLATE.format(name=serie.name, season=season, episode=episode)
                 ),
