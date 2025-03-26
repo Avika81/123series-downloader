@@ -1,5 +1,6 @@
-import time
+import selenium
 from seleniumwire import webdriver
+from seleniumwire.inspect import TimeoutException
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import json
@@ -25,44 +26,69 @@ class EpisodeDoesNotExist(Exception):
     pass
 
 
+class DidNotFindDownloadLink(Exception):
+    pass
+
+
 class GetVideoLinks:
     def __init__(self):
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
+    def _wait_for_download_url(self):
+        # lightningbolts.ru/_v19
+        return self.driver.wait_for_request("index-v1-a1.m3u8", timeout=15).url
+
+    def _try_all_servers(self, url):
+        window_handle = self.driver.window_handles[0]
+        for _ in range(3):
+            for nav in self.driver.find_element(By.ID, "list_of").find_elements(
+                By.CLASS_NAME, "nav-item"
+            ):
+                self.driver.switch_to.window(window_handle)
+                self.driver.execute_script("arguments[0].click();", nav)
+                self.driver.execute_script(
+                    "arguments[0].click();",
+                    nav.find_element(By.XPATH, "//a[@href='javascript:;']"),
+                )
+                try:
+                    nav.click()
+                except selenium.common.exceptions.ElementClickInterceptedException:
+                    print(f"Got an extremely annoying add, reloading the page")
+                    self.driver.get(url)
+                    break
+                try:
+                    return self._wait_for_download_url()
+                except TimeoutException:
+                    continue
+        # It does not exist on all the servers
+        raise DidNotFindDownloadLink(f"all the servers for {url} does not work :/")
+
     def get_download_link(self, url):
         del self.driver.requests  # clean old requests.
         self.driver.get(url)
-        if self.driver.find_elements(By.ID, "main-wrapper"):
-            try:
-                return self.driver.wait_for_request("index-v1-a1.m3u8", timeout=30).url
-            except Exception:
-                print(f"Error downloading: {url}, cChecing if other server works :/")
-                for nav in self.driver.find_element(By.ID, "list_of").find_elements(
-                    By.CLASS_NAME, "nav-item"
-                ):
-                    for _ in range(3):
-                        self.driver.execute_script("arguments[0].click();", nav)
-                        self.driver.execute_script(
-                            "arguments[0].click();",
-                            nav.find_element(By.XPATH, "//a[@href='javascript:;']"),
-                        )
-                    nav.click()
-                    time.sleep(15)
-                return self.driver.wait_for_request("index-v1-a1.m3u8", timeout=1).url
-        else:
+        if not self.driver.find_elements(By.ID, "main-wrapper"):
             raise EpisodeDoesNotExist(f"{url} has no presentation of video :/")
+        try:
+            return self._wait_for_download_url()
+        except TimeoutException:
+            print(f"Error downloading: {url}, Checing if other server works :/")
+            return self._try_all_servers(url)
+
+
+def add_episode(serie, season, gvl, episode):
+    add_video(
+        serie_name=serie.human_name,
+        name=f"{season:02}-{episode:02}",
+        url=gvl.get_download_link(
+            URL_TEMPLATE.format(name=serie.name, season=season, episode=episode)
+        ),
+    )
 
 
 def get_season_links(serie: Serie, season: int, gvl: GetVideoLinks):
     for episode in range(1, MAX_EPISODE):
         try:
-            add_video(
-                serie_name=serie.human_name,
-                name=f"{season:02}-{episode:02}",
-                url=gvl.get_download_link(
-                    URL_TEMPLATE.format(name=serie.name, season=season, episode=episode)
-                ),
-            )
+            add_episode(serie=serie, season=season, gvl=gvl, episode=episode)
         except EpisodeDoesNotExist:
             break
         except Exception as e:
