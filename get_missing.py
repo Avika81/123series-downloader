@@ -1,7 +1,6 @@
 from pathlib import Path
 from download_videos import DownloadVideos
 from get_download_links import (
-    DidNotFindDownloadLink,
     EpisodeDoesNotExist,
     GetVideoLinks,
     add_episode,
@@ -20,7 +19,7 @@ def get_missing(serie):
                     add_episode(serie=serie, gvl=gvl, episode=episode, season=season)
                 except EpisodeDoesNotExist:
                     break
-                except DidNotFindDownloadLink:
+                except Exception:
                     print(f"did not found a link for {season}:{episode} :(")
                     continue
     dv.start_downloads()
