@@ -1,25 +1,16 @@
+from pathlib import Path
 import selenium
 from seleniumwire import webdriver
 from seleniumwire.inspect import TimeoutException
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-import json
 from selenium.webdriver.common.by import By
 
-from consts import get_links_file_path
+from save_to_json import add_video
 from series import *
 
 URL_TEMPLATE = "https://123series.art/series/{name}/{season}-{episode}/"
 MAX_EPISODE = 400  # more than this and you should not watch this serie
-
-
-def add_video(serie_name, name, url):
-    with open(get_links_file_path(serie_name)) as f:
-        to_download = json.load(f)
-
-    to_download[name] = url
-    with open(get_links_file_path(serie_name), "w") as f:
-        json.dump(to_download, f, indent=4)
 
 
 class EpisodeDoesNotExist(Exception):
@@ -35,8 +26,9 @@ class GetVideoLinks:
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
     def _wait_for_download_url(self):
-        # lightningbolts.ru/_v19
-        return self.driver.wait_for_request("index-v1-a1.m3u8", timeout=15).url
+        return self.driver.wait_for_request(
+            "index-v1-a1.m3u8|(?=.*lightningbolts)(?=.*m3u8)", timeout=15
+        )
 
     def _try_all_servers(self, url):
         window_handle = self.driver.window_handles[0]
@@ -75,10 +67,19 @@ class GetVideoLinks:
             return self._try_all_servers(url)
 
 
+def get_filename(serie, season, episode):
+    return (
+        Path(__file__).parent
+        / "series"
+        / serie.human_name
+        / f"{season:02}-{episode:02}.mp4"
+    )
+
+
 def add_episode(serie, season, gvl, episode):
     add_video(
         serie_name=serie.human_name,
-        name=f"{season:02}-{episode:02}",
+        name=get_filename(serie=serie, season=season, episode=episode),
         url=gvl.get_download_link(
             URL_TEMPLATE.format(name=serie.name, season=season, episode=episode)
         ),
@@ -99,13 +100,6 @@ def get_season_links(serie: Serie, season: int, gvl: GetVideoLinks):
             continue
 
 
-def download(serie):
-    # start downloading the serie
-    from download_videos import DownloadVideos
-
-    DownloadVideos(serie.human_name).start_downloads()
-
-
 if __name__ == "__main__":
     # Tests:
     serie = SUITS
@@ -114,5 +108,3 @@ if __name__ == "__main__":
     for season in range(1, 12):
         get_season_links(gvl=gvl, serie=serie, season=season)
     gvl.driver.quit()
-
-    # download(serie)

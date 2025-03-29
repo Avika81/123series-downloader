@@ -1,28 +1,33 @@
-from pathlib import Path
 from download_videos import DownloadVideos
 from get_download_links import (
+    URL_TEMPLATE,
     EpisodeDoesNotExist,
     GetVideoLinks,
-    add_episode,
+    get_filename,
 )
 from series import THE_BLACKLIST
 
 
 def get_missing(serie):
-    dv = DownloadVideos(serie.human_name)
     gvl = GetVideoLinks()
+    to_download = {}
     for season in range(1, 10):
         for episode in range(1, 30):
-            if not Path(dv.get_filename(f"{season:02}-{episode:02}")).exists():
+            name = get_filename(serie=serie, season=season, episode=episode)
+            if not name.exists():
                 print(f"f{season}:{episode} is missing, getting its link")
                 try:
-                    add_episode(serie=serie, gvl=gvl, episode=episode, season=season)
+                    to_download[name] = gvl.get_download_link(
+                        URL_TEMPLATE.format(
+                            name=serie.name, season=season, episode=episode
+                        )
+                    )
                 except EpisodeDoesNotExist:
                     break
                 except Exception:
                     print(f"did not found a link for {season}:{episode} :(")
                     continue
-    dv.start_downloads()
+    DownloadVideos(to_download).start_downloads()
 
 
 if __name__ == "__main__":
