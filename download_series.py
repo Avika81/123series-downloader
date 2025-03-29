@@ -5,7 +5,9 @@ from my_series import *
 from serie import Serie
 
 URL_TEMPLATE = "https://123series.art/series/{name}/{season}-{episode}/"
-MAX_EPISODE = 400  # more than this and you should not watch this serie
+# more than this and you should not watch this serie
+MAX_EPISODE = 400
+MAX_SEASON = 20
 
 
 def get_filename(serie, season, episode):
@@ -54,7 +56,7 @@ def main():
     gvl = GetDownloadLink()
     to_download = {}
     for serie in SERIES:
-        for season in range(1, 20):
+        for season in range(1, MAX_SEASON):
             for episode in range(1, MAX_EPISODE):
                 name = get_filename(serie=serie, season=season, episode=episode)
                 if not name.exists():
@@ -64,11 +66,13 @@ def main():
                                 name=serie.name, season=season, episode=episode
                             )
                         )
-                        print(f"Added missing: f{season}:{episode}")
+                        print(f"Added: {serie.human_name} - {season}:{episode}")
                     except DownloadLinkDoesNotExist:
                         break
                     except Exception:
-                        print(f"did not found a link for {season}:{episode} :(")
+                        print(
+                            f"AAAAAAAAAAAAAAAAA: did not found a link for {serie.human_name} - {season}:{episode} :("
+                        )
                         continue
     gvl.driver.quit()
     DownloadVideos(to_download=to_download).start_downloads()

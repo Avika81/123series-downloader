@@ -2,9 +2,11 @@
 
 ## How to download a new serie?
 
-- `series.py`: add a serie you want to download (name+URL in 123series.art name).
-- `get_download_links.py`: choose the seasons you want to download, and get the links file (will create a json with download links in `links/serie_name`)
-- `download_videos.py`: runs ffmpeg download for all the links in the given folder, downloads to the `series/` directory.
+- `my_series.py`: add a serie/movie URL URL, for example:
+  - ```python
+    SERIES = [serie_from_url(url) fpr url in ["https://123series.art/series/<SERIE>"]
+    ```
+- run `python download_series.py` or `python download_movies.py`.
 
 ## requirements:
 
