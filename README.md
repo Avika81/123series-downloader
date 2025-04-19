@@ -10,4 +10,6 @@
 
 ## requirements:
 
-- pip install -r requirements.txt
+- `pip install -r requirements.txt`
+- `python -m seleniumwire extractcert`
+- `certutil -addstore -f "Root" ca.crt`
