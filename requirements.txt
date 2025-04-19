@@ -3,3 +3,4 @@ selenium-wire
 selenium
 webdriver_manager
 yt-dlp
+pycryptodomex
