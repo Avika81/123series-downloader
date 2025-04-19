@@ -1,5 +1,8 @@
 import selenium
-from seleniumwire import webdriver
+import seleniumwire.undetected_chromedriver as webdriver
+
+# replace with above if undetected is not your thing
+# from seleniumwire import webdriver
 from seleniumwire.inspect import TimeoutException
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
