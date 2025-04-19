@@ -22,7 +22,7 @@ class GetDownloadLink:
 
     def _wait_for_download_url(self):
         return self.driver.wait_for_request(
-            "index-v1-a1.m3u8|(?=.*lightningbolts)(?=.*m3u8)", timeout=15
+            "index-v1.m3u8|index-v1-a1.m3u8|(?=.*lightningbolts)(?=.*m3u8)", timeout=15
         )
 
     def _try_all_servers(self, url):
