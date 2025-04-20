@@ -6,7 +6,7 @@ from my_series import *
 URL_TEMPLATE = "https://123series.art/series/{name}/{season}-{episode}/"
 # more than this and you should not watch this serie
 MAX_EPISODE = 400
-MAX_SEASON = 20
+MAX_SEASON = 30
 
 
 def get_filename(serie, season, episode):
