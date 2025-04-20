@@ -14,6 +14,7 @@ def get_filename(serie, season, episode):
         Path(__file__).parent
         / "series"
         / serie.human_name
+        / f"{season:02}"
         / f"{season:02}-{episode:02}.mp4"
     )
 
@@ -29,6 +30,8 @@ class SerieDownloader:
         if name.exists():
             # No need to download twice
             return
+        if not name.parent.exists():
+            name.parent.mkdir()
         self.dvs.add(
             (
                 name,
