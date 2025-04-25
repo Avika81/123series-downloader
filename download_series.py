@@ -26,7 +26,6 @@ class SerieDownloader:
         self.gvl = GetDownloadLink()
         self.dvs = DownloadVideos()
         self.serie = serie
-        self.subtitle_downloads = []
 
     def download_subtitles(self, season, episode):
         name = get_filename(
@@ -39,12 +38,10 @@ class SerieDownloader:
                 )
             )
             if subtitles_link:
-                subtitle_downloader = threading.Thread(
+                threading.Thread(
                     target=download_file_from_url,
                     args=(subtitles_link, name),
-                )
-                subtitle_downloader.start()
-                self.subtitle_downloads.append(subtitle_downloader)
+                ).start()
             else:
                 print(
                     f"Error - subtitles was not found for - {self.serie.human_name}:{season}-{episode} :("
@@ -89,8 +86,6 @@ class SerieDownloader:
     def exit(self):
         self.gvl.driver.quit()
         self.dvs.wait_for_downloads()
-        for t in self.subtitle_downloads:
-            t.join()
 
 
 def main():
