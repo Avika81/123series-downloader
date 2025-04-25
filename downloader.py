@@ -45,9 +45,3 @@ class DownloadVideos:
         self.input_queue.put(None)
         self._queue_worker_thread.join()
         self.executor.shutdown(wait=True)
-
-    # def start_downloads(
-    #     self,
-    # ):
-    #     with ThreadPoolExecutor(max_workers=16) as executor:
-    #         executor.map(lambda args: download(*args), list(self.to_download.items()))

@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 from downloader import DownloadVideos
 from get_download_link import DownloadLinkDoesNotExist, GetDownloadLink
 from my_series import *
@@ -31,7 +32,7 @@ class SerieDownloader:
             # No need to download twice
             return
         if not name.parent.exists():
-            name.parent.mkdir()
+            name.parent.mkdir(parents=True)
         self.dvs.add(
             (
                 name,
@@ -50,17 +51,20 @@ class SerieDownloader:
                 try:
                     self.download_episode(episode=episode, season=season)
                 except DownloadLinkDoesNotExist:
+                    if episode == 1:
+                        return self.exit()
                     break
-                except Exception:
+                except Exception as e:
                     print(
                         f"AAAAAAAAAAAAAAAAA: did not found a link for {self.serie.human_name} - {season}:{episode} :("
                     )
                     continue
-        self.exit()
+        return self.exit()
 
     def exit(self):
         self.gvl.driver.quit()
         self.dvs.wait_for_downloads()
+        time.sleep(5)
 
 
 def main():
