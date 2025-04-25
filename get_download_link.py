@@ -8,6 +8,7 @@ from seleniumwire.inspect import TimeoutException
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 
 from my_series import *
 
@@ -22,7 +23,12 @@ class DidNotFindDownloadLink(Exception):
 
 class GetDownloadLink:
     def __init__(self):
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        options = Options()
+        options.add_argument("--headless=new")
+        self.driver = webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()), options=options
+        )
+        print("Started webdriver.")
 
     def _wait_for_download_url(self):
         return self.driver.wait_for_request(
