@@ -1,5 +1,6 @@
 from pathlib import Path
-import time
+
+import requests
 from downloader import DownloadVideos
 from get_download_link import DownloadLinkDoesNotExist, GetDownloadLink
 from my_series import *
@@ -10,13 +11,13 @@ MAX_EPISODE = 400
 MAX_SEASON = 30
 
 
-def get_filename(serie, season, episode):
+def get_filename(serie, season, episode, extension="mp4"):
     return (
         Path(__file__).parent
         / "series"
         / serie.human_name
         / f"{season:02}"
-        / f"{season:02}-{episode:02}.mp4"
+        / f"{season:02}-{episode:02}.{extension}"
     )
 
 
@@ -25,6 +26,26 @@ class SerieDownloader:
         self.gvl = GetDownloadLink()
         self.dvs = DownloadVideos()
         self.serie = serie
+
+    def download_subtitles(self, season, episode):
+        name = get_filename(
+            serie=self.serie, season=season, episode=episode, extension="vtt"
+        )
+        if not name.exists():
+            subtitles_link = self.gvl.get_subtitles_link(
+                URL_TEMPLATE.format(
+                    name=self.serie.name, season=season, episode=episode
+                )
+            )
+            if subtitles_link:
+                with name.open("wb") as of:
+                    of.write(requests.get(subtitles_link).content)
+            else:
+                import IPython
+
+                IPython.embed(
+                    "Error - subtitles was not found :/ - debug if you want, exit() to continue.. \n\n\n"
+                )
 
     def download_episode(self, season, episode):
         name = get_filename(serie=self.serie, season=season, episode=episode)
@@ -48,6 +69,7 @@ class SerieDownloader:
     def download_all(self):
         for season in range(1, MAX_SEASON):
             for episode in range(1, MAX_EPISODE):
+                self.download_subtitles(episode=episode, season=season)
                 try:
                     self.download_episode(episode=episode, season=season)
                 except DownloadLinkDoesNotExist:
@@ -56,7 +78,7 @@ class SerieDownloader:
                     break
                 except Exception as e:
                     print(
-                        f"AAAAAAAAAAAAAAAAA: did not found a link for {self.serie.human_name} - {season}:{episode} :("
+                        f"AAAAAAAAAAAAAAAAA: did not found a link for {self.serie.human_name} - {season}:{episode}, exception: {str(e)}"
                     )
                     continue
         return self.exit()

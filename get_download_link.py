@@ -1,3 +1,4 @@
+import time
 import selenium
 import seleniumwire.undetected_chromedriver as webdriver
 
@@ -53,6 +54,15 @@ class GetDownloadLink:
                     continue
         # It does not exist on all the servers
         raise DidNotFindDownloadLink(f"all the servers for {url} does not work :/")
+
+    def get_subtitles_link(self, url):
+        self.driver.get(url)
+        time.sleep(5)
+        subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
+        for subtitles in subtitles_dropdown.children():
+            if SUBTITLE_LANGUAGE.lower() in subtitles.text.lower():
+                print(f'found subtitles link: {subtitles.get_property("value")}')
+                return subtitles.get_property("value")
 
     def get_download_link(self, url):
         del self.driver.requests  # clean old requests.
