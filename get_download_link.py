@@ -67,7 +67,7 @@ class GetDownloadLink:
         subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
         for subtitles in subtitles_dropdown.children():
             if SUBTITLE_LANGUAGE.lower() in subtitles.text.lower():
-                print(f'found subtitles link: {subtitles.get_property("value")}')
+                print(f'found subtitles link in {url}')
                 return subtitles.get_property("value")
 
     def _get_episode_site(self, url):
