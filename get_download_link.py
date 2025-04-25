@@ -56,19 +56,22 @@ class GetDownloadLink:
         raise DidNotFindDownloadLink(f"all the servers for {url} does not work :/")
 
     def get_subtitles_link(self, url):
-        self.driver.get(url)
-        time.sleep(5)
+        self._get_episode_site(url)
+        time.sleep(5)  # need the subtitles to load properly...
         subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
         for subtitles in subtitles_dropdown.children():
             if SUBTITLE_LANGUAGE.lower() in subtitles.text.lower():
                 print(f'found subtitles link: {subtitles.get_property("value")}')
                 return subtitles.get_property("value")
 
-    def get_download_link(self, url):
-        del self.driver.requests  # clean old requests.
+    def _get_episode_site(self, url):
         self.driver.get(url)
         if not self.driver.find_elements(By.ID, "main-wrapper"):
             raise DownloadLinkDoesNotExist(f"{url} has no presentation of video :/")
+
+    def get_download_link(self, url):
+        del self.driver.requests  # clean old requests.
+        self._get_episode_site(url)
         try:
             return self._wait_for_download_url()
         except TimeoutException:
