@@ -68,7 +68,7 @@ class SerieDownloader:
             for episode in range(1, MAX_EPISODE):
                 try:
                     self.download_subtitles(episode=episode, season=season)
-                    # self.download_episode(episode=episode, season=season)
+                    self.download_episode(episode=episode, season=season)
                 except DownloadLinkDoesNotExist:
                     if episode == 1:
                         return self.exit()
