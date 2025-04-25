@@ -45,14 +45,10 @@ class SerieDownloader:
                 )
                 subtitle_downloader.start()
                 self.subtitle_downloads.append(subtitle_downloader)
-
             else:
                 print(
-                    "Error - subtitles was not found :/ - debug if you want, exit() to continue.. \n\n\n"
+                    f"Error - subtitles was not found for - {self.serie.human_name}:{season}-{episode} :("
                 )
-                import IPython
-
-                IPython.embed()
 
     def download_episode(self, season, episode):
         name = get_filename(serie=self.serie, season=season, episode=episode)
