@@ -1,7 +1,6 @@
 from pathlib import Path
-import threading
 
-from downloader import DownloadVideos, download_file_from_url
+from downloader import DownloadVideos, async_download_file_from_url
 from get_download_link import DownloadLinkDoesNotExist, GetDownloadLink
 from my_series import *
 
@@ -12,13 +11,16 @@ MAX_SEASON = 30
 
 
 def get_filename(serie, season, episode, extension="mp4"):
-    return (
+    name = (
         Path(__file__).parent
         / "series"
         / serie.human_name
         / f"{season:02}"
         / f"{season:02}-{episode:02}.{extension}"
     )
+    if not name.parent.exists():
+        name.parent.mkdir(parents=True)
+    return name
 
 
 class SerieDownloader:
@@ -38,10 +40,7 @@ class SerieDownloader:
                 )
             )
             if subtitles_link:
-                threading.Thread(
-                    target=download_file_from_url,
-                    args=(subtitles_link, name),
-                ).start()
+                async_download_file_from_url(subtitles_link, name)
             else:
                 print(
                     f"Error - subtitles was not found for - {self.serie.human_name}:{season}-{episode} :("
@@ -52,8 +51,6 @@ class SerieDownloader:
         if name.exists():
             # No need to download twice
             return
-        if not name.parent.exists():
-            name.parent.mkdir(parents=True)
         self.dvs.add(
             (
                 name,
@@ -71,7 +68,7 @@ class SerieDownloader:
             for episode in range(1, MAX_EPISODE):
                 try:
                     self.download_subtitles(episode=episode, season=season)
-                    self.download_episode(episode=episode, season=season)
+                    # self.download_episode(episode=episode, season=season)
                 except DownloadLinkDoesNotExist:
                     if episode == 1:
                         return self.exit()

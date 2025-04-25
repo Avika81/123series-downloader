@@ -6,6 +6,12 @@ import yt_dlp
 import queue
 from concurrent.futures import ThreadPoolExecutor
 
+def async_download_file_from_url(url, filename):
+    return threading.Thread(
+                    target=download_file_from_url,
+                    args=(url, filename),
+                ).start()
+
 
 def download_file_from_url(url: str, filename: str):
     response = requests.get(url)
