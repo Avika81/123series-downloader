@@ -1,7 +1,7 @@
 from pathlib import Path
+import threading
 
-import requests
-from downloader import DownloadVideos
+from downloader import DownloadVideos, download_file_from_url
 from get_download_link import DownloadLinkDoesNotExist, GetDownloadLink
 from my_series import *
 
@@ -26,6 +26,7 @@ class SerieDownloader:
         self.gvl = GetDownloadLink()
         self.dvs = DownloadVideos()
         self.serie = serie
+        self.subtitle_downloads = []
 
     def download_subtitles(self, season, episode):
         name = get_filename(
@@ -38,14 +39,20 @@ class SerieDownloader:
                 )
             )
             if subtitles_link:
-                with name.open("wb") as of:
-                    of.write(requests.get(subtitles_link).content)
-            else:
-                import IPython
+                subtitle_downloader = threading.Thread(
+                    target=download_file_from_url,
+                    args=(subtitles_link, name),
+                )
+                subtitle_downloader.start()
+                self.subtitle_downloads.append(subtitle_downloader)
 
-                IPython.embed(
+            else:
+                print(
                     "Error - subtitles was not found :/ - debug if you want, exit() to continue.. \n\n\n"
                 )
+                import IPython
+
+                IPython.embed()
 
     def download_episode(self, season, episode):
         name = get_filename(serie=self.serie, season=season, episode=episode)
@@ -69,8 +76,8 @@ class SerieDownloader:
     def download_all(self):
         for season in range(1, MAX_SEASON):
             for episode in range(1, MAX_EPISODE):
-                self.download_subtitles(episode=episode, season=season)
                 try:
+                    self.download_subtitles(episode=episode, season=season)
                     self.download_episode(episode=episode, season=season)
                 except DownloadLinkDoesNotExist:
                     if episode == 1:
@@ -86,7 +93,8 @@ class SerieDownloader:
     def exit(self):
         self.gvl.driver.quit()
         self.dvs.wait_for_downloads()
-        time.sleep(5)
+        for t in self.subtitle_downloads:
+            t.join()
 
 
 def main():

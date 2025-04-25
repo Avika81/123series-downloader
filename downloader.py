@@ -1,8 +1,16 @@
 from concurrent.futures import ThreadPoolExecutor
 import threading
+import time
+import requests
 import yt_dlp
 import queue
 from concurrent.futures import ThreadPoolExecutor
+
+
+def download_file_from_url(url: str, filename: str):
+    response = requests.get(url)
+    with open(filename, "wb") as f:
+        f.write(response.content)
 
 
 def download(name: str, req):
@@ -45,3 +53,4 @@ class DownloadVideos:
         self.input_queue.put(None)
         self._queue_worker_thread.join()
         self.executor.shutdown(wait=True)
+        time.sleep(5)
