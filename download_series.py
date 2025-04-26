@@ -81,7 +81,6 @@ class SerieDownloader:
         return self.exit()
 
     def exit(self):
-        self.gvl.driver.quit()
         self.dvs.wait_for_downloads()
 
 

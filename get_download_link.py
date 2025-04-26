@@ -24,7 +24,9 @@ class DidNotFindDownloadLink(Exception):
 class GetDownloadLink:
     def __init__(self):
         options = Options()
-        options.add_argument("--headless=new")
+        # options.add_argument("--headless=new")
+        options.add_argument("--ignore-certificate-errors")
+
         self.driver = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=options
         )
@@ -62,22 +64,22 @@ class GetDownloadLink:
         raise DidNotFindDownloadLink(f"all the servers for {url} does not work :/")
 
     def get_subtitles_link(self, url):
-        self._get_episode_site(url)
+        self._get_url(url)
         time.sleep(5)  # need the subtitles to load properly...
         subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
         for subtitles in subtitles_dropdown.children():
             if SUBTITLE_LANGUAGE.lower() in subtitles.text.lower():
-                print(f'found subtitles link in {url}')
+                print(f"found subtitles link in {url}")
                 return subtitles.get_property("value")
 
-    def _get_episode_site(self, url):
+    def _get_url(self, url):
         self.driver.get(url)
         if not self.driver.find_elements(By.ID, "main-wrapper"):
             raise DownloadLinkDoesNotExist(f"{url} has no presentation of video :/")
 
     def get_download_link(self, url):
         del self.driver.requests  # clean old requests.
-        self._get_episode_site(url)
+        self._get_url(url)
         try:
             return self._wait_for_download_url()
         except TimeoutException:

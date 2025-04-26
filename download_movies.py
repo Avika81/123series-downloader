@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from downloader import DownloadVideos, async_download_file_from_url, download_file_from_url
+from downloader import DownloadVideos, async_download_file_from_url
 from get_download_link import GetDownloadLink
 from my_series import MOVIES
 
@@ -16,14 +16,15 @@ def main():
             if not Path(name).exists():
                 dvs.add((name, gvl.get_download_link(url)))
 
-            subtitle_name = f'{MOVIES_PATH / url.split("/movie/")[1].rsplit("-", 1)[0]}.vtt'
+            subtitle_name = (
+                f'{MOVIES_PATH / url.split("/movie/")[1].rsplit("-", 1)[0]}.vtt'
+            )
             if not Path(subtitle_name).exists():
-                async_download_file_from_url(url, subtitle_name)
+                async_download_file_from_url(gvl.get_subtitles_link(url), subtitle_name)
 
         except Exception:
             print(f"Error downloading {url}")
 
-    gvl.driver.quit()
     dvs.wait_for_downloads()
 
 
