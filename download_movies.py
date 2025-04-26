@@ -12,13 +12,22 @@ def main():
     dvs = DownloadVideos()
     for url in MOVIES:
         try:
-            name = f'{MOVIES_PATH / url.split("/movie/")[1].rsplit("-", 1)[0]}.mp4'
+            name = (
+                str(
+                    MOVIES_PATH / url.split("/movie")[1].split("/")[1].rsplit("-", 1)[0]
+                )
+                + ".mp4"
+            )
             if not Path(name).exists():
                 dvs.add((name, gvl.get_download_link(url)))
 
             subtitle_name = (
-                f'{MOVIES_PATH / url.split("/movie/")[1].rsplit("-", 1)[0]}.vtt'
+                str(
+                    MOVIES_PATH / url.split("/movie")[1].split("/")[1].rsplit("-", 1)[0]
+                )
+                + ".vtt"
             )
+
             if not Path(subtitle_name).exists():
                 async_download_file_from_url(gvl.get_subtitles_link(url), subtitle_name)
 

@@ -34,7 +34,7 @@ class GetDownloadLink:
 
     def _wait_for_download_url(self):
         return self.driver.wait_for_request(
-            "==.m3u8|index-v1.m3u8|index-v1-a1.m3u8|(?=.*lightningbolts)(?=.*m3u8)",
+            ".m3u8|index-v1.m3u8|index-v1-a1.m3u8|(?=.*lightningbolts)(?=.*m3u8)",
             timeout=15,
         )
 
@@ -77,8 +77,17 @@ class GetDownloadLink:
         if not self.driver.find_elements(By.ID, "main-wrapper"):
             raise DownloadLinkDoesNotExist(f"{url} has no presentation of video :/")
 
+    def _get_link_gomovie123(self, url):
+        print("Getting link from gomovie123")
+        self.driver.get(url)
+        time.sleep(5)
+        self.driver.find_elements(By.ID, "cover")[0].click()
+        return self._wait_for_download_url()
+
     def get_download_link(self, url):
         del self.driver.requests  # clean old requests.
+        if url.startswith("https://gomovie123"):
+            return self._get_link_gomovie123(url)
         self._get_url(url)
         try:
             return self._wait_for_download_url()
