@@ -24,7 +24,7 @@ class DidNotFindDownloadLink(Exception):
 class GetDownloadLink:
     def __init__(self):
         options = Options()
-        # options.add_argument("--headless=new")
+        options.add_argument("--headless=new")
         options.add_argument("--ignore-certificate-errors")
 
         self.driver = webdriver.Chrome(
