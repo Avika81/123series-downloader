@@ -6,11 +6,12 @@ import yt_dlp
 import queue
 from concurrent.futures import ThreadPoolExecutor
 
+
 def async_download_file_from_url(url, filename):
     return threading.Thread(
-                    target=download_file_from_url,
-                    args=(url, filename),
-                ).start()
+        target=download_file_from_url,
+        args=(url, filename),
+    ).start()
 
 
 def download_file_from_url(url: str, filename: str):
@@ -22,8 +23,11 @@ def download_file_from_url(url: str, filename: str):
 def download(name: str, req):
     options = {
         "outtmpl": str(name),  # Output filename format
-        "merge_output_format": "mp4",  # Merge video and audio into MKV
+        "merge_output_format": "mp4",  # Merge video and audio into mp4
         "http_headers": req.headers,
+        "hls_prefer_native": True,
+        "dash_prefer_native": True,
+        "concurrent_fragment_downloads": 10,
         "quiet": True,
     }
 
