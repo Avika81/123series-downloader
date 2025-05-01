@@ -29,7 +29,9 @@ def main():
             )
 
             if not Path(subtitle_name).exists():
-                async_download_file_from_url(gvl.get_subtitles_link(url), subtitle_name)
+                subtitles_link = gvl.get_subtitles_link(url)
+                if subtitles_link:
+                    async_download_file_from_url(subtitles_link, subtitle_name)
 
         except Exception:
             print(f"Error downloading {url}")

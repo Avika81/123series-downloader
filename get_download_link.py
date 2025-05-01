@@ -64,6 +64,8 @@ class GetDownloadLink:
         raise DidNotFindDownloadLink(f"all the servers for {url} does not work :/")
 
     def get_subtitles_link(self, url):
+        if url.startswith("https://gomovie123"):
+            return
         self._get_url(url)
         time.sleep(5)  # need the subtitles to load properly...
         subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
