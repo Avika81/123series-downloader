@@ -69,7 +69,7 @@ class GetDownloadLink:
         self._get_url(url)
         time.sleep(5)  # need the subtitles to load properly...
         subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
-        for subtitles in subtitles_dropdown.children():
+        for subtitles in subtitles_dropdown.children(): # type: ignore
             if SUBTITLE_LANGUAGE.lower() in subtitles.text.lower():
                 print(f"found subtitles link in {url}")
                 return subtitles.get_property("value")
