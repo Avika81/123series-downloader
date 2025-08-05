@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import time
 import selenium
 import seleniumwire.undetected_chromedriver as webdriver
@@ -31,6 +33,19 @@ class GetDownloadLink:
             service=Service(ChromeDriverManager().install()), options=options
         )
         print("Started webdriver.")
+
+    def _kill_old_webdrivers(self):
+        if sys.platform.startswith("win"):
+            subprocess.call(
+                "taskkill /F /IM chromedriver.exe /T",
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            subprocess.call(
+                "taskkill /F /IM chrome.exe /T",
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
 
     def _wait_for_download_url(self):
         return self.driver.wait_for_request(
@@ -69,7 +84,7 @@ class GetDownloadLink:
         self._get_url(url)
         time.sleep(5)  # need the subtitles to load properly...
         subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
-        for subtitles in subtitles_dropdown.children(): # type: ignore
+        for subtitles in subtitles_dropdown.children():  # type: ignore
             if SUBTITLE_LANGUAGE.lower() in subtitles.text.lower():
                 print(f"found subtitles link in {url}")
                 return subtitles.get_property("value")

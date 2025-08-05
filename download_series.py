@@ -1,4 +1,5 @@
 from pathlib import Path
+from selenium.common.exceptions import NoSuchWindowException
 
 from downloader import DownloadVideos, async_download_file_from_url
 from get_download_link import DownloadLinkDoesNotExist, GetDownloadLink
@@ -73,6 +74,9 @@ class SerieDownloader:
                     if episode == 1:
                         return self.exit()
                     break
+                except NoSuchWindowException:
+                    print("An error accured")
+                    return self.exit()
                 except Exception as e:
                     print(
                         f"AAAAAAAAAAAAAAAAA: did not found a link for {self.serie.human_name} - {season}:{episode}, exception: {str(e)}"
