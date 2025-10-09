@@ -67,7 +67,7 @@ class GetDownloadLink:
                 )
                 try:
                     nav.click()
-                except selenium.common.exceptions.ElementClickInterceptedException:
+                except selenium.common.exceptions.Ele+mentClickInterceptedException:  # type: ignore
                     print(f"Got an extremely annoying add, reloading the page")
                     self.driver.get(url)
                     break
