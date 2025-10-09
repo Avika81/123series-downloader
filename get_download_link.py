@@ -2,6 +2,7 @@ import subprocess
 import sys
 import time
 import selenium
+import seleniumwire.request
 import seleniumwire.undetected_chromedriver as webdriver
 
 # replace with above if undetected is not your thing
@@ -11,6 +12,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from typing import Optional
 
 from my_series import *
 
@@ -34,7 +36,7 @@ class GetDownloadLink:
         )
         print("Started webdriver.")
 
-    def _kill_old_webdrivers(self):
+    def _kill_old_webdrivers(self) -> None:
         if sys.platform.startswith("win"):
             subprocess.call(
                 "taskkill /F /IM chromedriver.exe /T",
@@ -47,7 +49,7 @@ class GetDownloadLink:
                 stderr=subprocess.DEVNULL,
             )
 
-    def _wait_for_download_url(self):
+    def _wait_for_download_url(self) -> seleniumwire.request.Request:
         return self.driver.wait_for_request(
             ".m3u8|index-v1.m3u8|index-v1-a1.m3u8|(?=.*lightningbolts)(?=.*m3u8)",
             timeout=15,
@@ -60,13 +62,13 @@ class GetDownloadLink:
     def _get_download_link_unknown(self, url):
         raise DownloadLinkDoesNotExist(f"The site - {url} is unknown")
 
-    def get_subtitles_link(self, url):
+    def get_subtitles_link(self, url) -> Optional[str]:
         # For example, calls "__get_url_123series(url), if none exists for site returns none."
         return getattr(
             self, f"_get_subtitles_{self._site_name(url)}", lambda url: None
         )(url)
 
-    def get_download_link(self, url):
+    def get_download_link(self, url) -> seleniumwire.request.Request:
         del self.driver.requests  # clean old requests.
         return getattr(
             self,
@@ -74,19 +76,25 @@ class GetDownloadLink:
             self._get_download_link_unknown,
         )(url)
 
-    def _get_download_link_gomovie123(self, url):
+    """
+    These function names are important, it is called with getattr(self, "<func_name>_<site_name>").
+    To add support for another site (new_site), one needs to implement _get_download_link_new_site, 
+        if there are subtitles also _get_subtitles_new_site.
+    """
+
+    def _get_download_link_gomovie123(self, url) -> seleniumwire.request.Request:
         print("Getting link from gomovie123")
         self.driver.get(url)
         time.sleep(5)
         self.driver.find_elements(By.ID, "cover")[0].click()
         return self._wait_for_download_url()
 
-    def __get_url_123series(self, url):
+    def __get_url_123series(self, url) -> None:
         self.driver.get(url)
         if not self.driver.find_elements(By.ID, "main-wrapper"):
             raise DownloadLinkDoesNotExist(f"{url} has no presentation of video :/")
 
-    def _get_subtitles_123series(self, url):
+    def _get_subtitles_123series(self, url) -> Optional[str]:
         self.__get_url_123series(url)
         time.sleep(5)  # need the subtitles to load properly...
         subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
@@ -95,7 +103,7 @@ class GetDownloadLink:
                 print(f"found subtitles link in {url}")
                 return subtitles.get_property("value")
 
-    def __try_all_servers_123series(self, url):
+    def __try_all_servers_123series(self, url) -> seleniumwire.request.Request:
         window_handle = self.driver.window_handles[0]
         for _ in range(3):
             for nav in self.driver.find_element(By.ID, "list_of").find_elements(
@@ -120,7 +128,7 @@ class GetDownloadLink:
         # It does not exist on all the servers
         raise DidNotFindDownloadLink(f"all the servers for {url} does not work :/")
 
-    def _get_download_link_123series(self, url):
+    def _get_download_link_123series(self, url) -> seleniumwire.request.Request:
         self.__get_url_123series(url)
         try:
             return self._wait_for_download_url()
