@@ -53,7 +53,25 @@ class GetDownloadLink:
             timeout=15,
         )
 
-    def _try_all_servers(self, url):
+    @staticmethod
+    def _site_name(url):
+        return url.split("//")[1].split(".")[0]
+
+    def _get_url_123series(self, url):
+        self.driver.get(url)
+        if not self.driver.find_elements(By.ID, "main-wrapper"):
+            raise DownloadLinkDoesNotExist(f"{url} has no presentation of video :/")
+
+    def _get_subtitles_123series(self, url):
+        self._get_url_123series(url)
+        time.sleep(5)  # need the subtitles to load properly...
+        subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
+        for subtitles in subtitles_dropdown.children():  # type: ignore
+            if SUBTITLE_LANGUAGE.lower() in subtitles.text.lower():
+                print(f"found subtitles link in {url}")
+                return subtitles.get_property("value")
+
+    def _try_all_servers_123series(self, url):
         window_handle = self.driver.window_handles[0]
         for _ in range(3):
             for nav in self.driver.find_element(By.ID, "list_of").find_elements(
@@ -67,7 +85,7 @@ class GetDownloadLink:
                 )
                 try:
                     nav.click()
-                except selenium.common.exceptions.Ele+mentClickInterceptedException:  # type: ignore
+                except selenium.common.exceptions.Ele + mentClickInterceptedException:  # type: ignore
                     print(f"Got an extremely annoying add, reloading the page")
                     self.driver.get(url)
                     break
@@ -78,36 +96,38 @@ class GetDownloadLink:
         # It does not exist on all the servers
         raise DidNotFindDownloadLink(f"all the servers for {url} does not work :/")
 
-    def get_subtitles_link(self, url):
-        if url.startswith("https://gomovie123"):
-            return
-        self._get_url(url)
-        time.sleep(5)  # need the subtitles to load properly...
-        subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
-        for subtitles in subtitles_dropdown.children():  # type: ignore
-            if SUBTITLE_LANGUAGE.lower() in subtitles.text.lower():
-                print(f"found subtitles link in {url}")
-                return subtitles.get_property("value")
-
-    def _get_url(self, url):
-        self.driver.get(url)
-        if not self.driver.find_elements(By.ID, "main-wrapper"):
-            raise DownloadLinkDoesNotExist(f"{url} has no presentation of video :/")
-
-    def _get_link_gomovie123(self, url):
+    def _get_download_link_gomovie123(self, url):
         print("Getting link from gomovie123")
         self.driver.get(url)
         time.sleep(5)
         self.driver.find_elements(By.ID, "cover")[0].click()
         return self._wait_for_download_url()
 
-    def get_download_link(self, url):
-        del self.driver.requests  # clean old requests.
-        if url.startswith("https://gomovie123"):
-            return self._get_link_gomovie123(url)
-        self._get_url(url)
+    def _get_download_link_123series(self, url):
+        self._get_url_123series(url)
         try:
             return self._wait_for_download_url()
         except TimeoutException:
             print(f"Error downloading: {url}, Checing if other server works :/")
-            return self._try_all_servers(url)
+            return self._try_all_servers_123series(url)
+
+    def _get_download_link_unknown(self, url):
+        raise DownloadLinkDoesNotExist(f"The site - {url} is unknown")
+
+    def get_subtitles_link(self, url):
+        # For example, calls "_get_url_123series(url), if none exists for site returns none."
+        return getattr(
+            self, f"_get_subtitles_{self._site_name(url)}", lambda url: None
+        )(url)
+
+    def get_download_link(self, url):
+        del self.driver.requests  # clean old requests.
+        return getattr(
+            self,
+            f"_get_download_link_{self._site_name(url)}",
+            self._get_download_link_unknown,
+        )(url)
+
+
+class Series123Handlser:
+    pass
