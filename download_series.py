@@ -44,7 +44,7 @@ class SerieDownloader:
                 async_download_file_from_url(subtitles_link, name)
             else:
                 print(
-                    f"Error - subtitles was not found for - {self.serie.human_name}:{season}-{episode} :("
+                    f"Error - subtitles was not found for - {self.serie.human_name} : {season}-{episode} :("
                 )
 
     def download_episode(self, season, episode):
