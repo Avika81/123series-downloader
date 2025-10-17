@@ -15,11 +15,23 @@ def sync_all(base_path=str(Path(__file__).parent / "movies")):
     for video_file in files:
         if video_file.endswith(".mp4"):
             subtitles_file = video_file.replace(".mp4", ".vtt")
+            video_path = os.path.join(base_path, video_file)
+            subtitles_path = os.path.join(base_path, subtitles_file)
             if subtitles_file in files:
-                sync_subtitles(
-                    video_path=os.path.join(base_path, video_file),
-                    subtitles_path=os.path.join(base_path, subtitles_file),
-                )
+                try:
+                    sync_subtitles(
+                        video_path=video_path,
+                        subtitles_path=subtitles_path,
+                    )
+                except ValueError as e:
+                    if (
+                        e.args[0]
+                        == "Unable to detect speech. Perhaps try specifying a different stream / track, or a different vad."
+                    ):
+                        print(f"Error with video {video_path}. Removing it.")
+                        os.remove(video_path)
+                    else:
+                        raise
 
 
 @cache
@@ -31,6 +43,7 @@ def sync_subtitles(subtitles_path, video_path):
     ffsubsync.ffsubsync.run(
         args,
     )
+
     return subtitles_path
 
 
