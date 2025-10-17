@@ -6,7 +6,7 @@ from persist_cache.persist_cache import cache
 
 
 def sync_all_series():
-    for base_path in glob.glob(str(Path(__file__).parent / "series")):
+    for base_path in glob.glob(str(Path(__file__).parent / "series" / "*" / "*")):
         sync_all(base_path=base_path)
 
 
@@ -31,6 +31,7 @@ def sync_subtitles(subtitles_path, video_path):
     ffsubsync.ffsubsync.run(
         args,
     )
+    return subtitles_path
 
 
 if __name__ == "__main__":
