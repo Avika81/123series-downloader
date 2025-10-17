@@ -5,3 +5,5 @@ webdriver_manager
 yt-dlp
 pycryptodomex
 undetected_chromedriver
+ffsubsync
+persist_cache
