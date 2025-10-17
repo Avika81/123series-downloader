@@ -3,6 +3,7 @@ from pathlib import Path
 from downloader import DownloadVideos, async_download_file_from_url
 from get_download_link import GetDownloadLink
 from my_series import MOVIES
+from sync_subtitles import sync_all
 
 MOVIES_PATH = Path(__file__).parent / "movies"
 
@@ -37,6 +38,7 @@ def main():
             print(f"Error downloading {url}")
 
     dvs.wait_for_downloads()
+    sync_all()
 
 
 if __name__ == "__main__":

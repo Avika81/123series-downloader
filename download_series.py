@@ -4,6 +4,7 @@ from selenium.common.exceptions import NoSuchWindowException
 from downloader import DownloadVideos, async_download_file_from_url
 from get_download_link import DownloadLinkDoesNotExist, GetDownloadLink
 from my_series import *
+from sync_subtitles import sync_all_series
 
 URL_TEMPLATE = "https://123series.art/series/{name}/{season}-{episode}/"
 # more than this and you should not watch this serie
@@ -92,6 +93,7 @@ def main():
     for _ in range(3):
         for serie in SERIES:
             SerieDownloader(serie).download_all()
+    sync_all_series()
 
 
 if __name__ == "__main__":
