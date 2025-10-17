@@ -5,15 +5,18 @@ import os
 import glob
 from persist_cache.persist_cache import cache
 
+SYNC_EXECUTOR = ThreadPoolExecutor(max_workers=16)
 
-def sync_all_series(executor=None):
+
+def sync_all_series():
     for base_path in glob.glob(str(Path(__file__).parent / "series" / "*" / "*")):
-        sync_all(base_path=base_path, executor=executor)
+        sync_all_movies(base_path=base_path)
+    SYNC_EXECUTOR.shutdown(wait=True)
 
 
 def sync_one(subtitles_path, video_path):
     try:
-        sync_subtitles(
+        _sync_subtitles(
             video_path=video_path,
             subtitles_path=subtitles_path,
         )
@@ -28,7 +31,9 @@ def sync_one(subtitles_path, video_path):
             raise
 
 
-def sync_all(base_path=str(Path(__file__).parent / "movies"), executor=None):
+def sync_all_movies(
+    base_path=str(Path(__file__).parent / "movies"), shutdown_executor=False
+):
     files = os.listdir(base_path)
     for video_file in files:
         if video_file.endswith(".mp4"):
@@ -36,17 +41,17 @@ def sync_all(base_path=str(Path(__file__).parent / "movies"), executor=None):
             video_path = os.path.join(base_path, video_file)
             subtitles_path = os.path.join(base_path, subtitles_file)
             if subtitles_file in files:
-                f = lambda: sync_one(
-                    subtitles_path=subtitles_path, video_path=video_path
+                SYNC_EXECUTOR.submit(
+                    lambda: sync_one(
+                        subtitles_path=subtitles_path, video_path=video_path
+                    )
                 )
-                if executor:
-                    executor.submit(f)
-                else:
-                    f()
+    if shutdown_executor:
+        SYNC_EXECUTOR.shutdown(wait=True)
 
 
 @cache
-def sync_subtitles(subtitles_path, video_path):
+def _sync_subtitles(subtitles_path, video_path):
     print(f"Synchronizing: {subtitles_path}")
     args = ffsubsync.ffsubsync.make_parser().parse_args(
         args=["-i", subtitles_path, "--overwrite-input", video_path]
@@ -59,8 +64,6 @@ def sync_subtitles(subtitles_path, video_path):
 
 
 if __name__ == "__main__":
-    executor = ThreadPoolExecutor(max_workers=16)
-    sync_all(executor=executor)
-    sync_all_series(executor=executor)
-    executor.shutdown(wait=True)
+    sync_all_movies()
+    sync_all_series()
     print("Done, your subtitle are snchronized and perfect (I hope) :)")
