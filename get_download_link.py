@@ -1,3 +1,4 @@
+import logging
 import subprocess
 import sys
 import time
@@ -29,6 +30,7 @@ class GetDownloadLink:
     def __init__(self):
         options = Options()
         options.add_argument("--headless=new")
+        logging.getLogger("seleniumwire").setLevel(logging.WARNING)
         options.add_argument("--ignore-certificate-errors")
 
         self.driver = webdriver.Chrome(
