@@ -47,6 +47,7 @@ def sync_all_movies(
                     )
                 )
     if shutdown_executor:
+        print("Your subtitle are snchronized and perfect (I hope) :)")
         SYNC_EXECUTOR.shutdown(wait=True)
 
 
