@@ -25,15 +25,24 @@ def download(name: str, req):
         "outtmpl": str(name),  # Output filename format
         "merge_output_format": "mp4",  # Merge video and audio into mp4
         "http_headers": req.headers,
-        "hls_prefer_native": True,
+        "hls_prefer_native": False,  # <-- CRITICAL
         "dash_prefer_native": True,
         "concurrent_fragment_downloads": 10,
         "quiet": True,
+        "downloader": "ffmpeg",  # force ffmpeg
+        "downloader_args": {
+            "ffmpeg": [
+                "-hls_flags",
+                "delete_segments",
+            ]
+        },
+        "hls_use_mpegts": True,
     }
 
     print(f"Downloading {name}")
     with yt_dlp.YoutubeDL(options) as ydl:
         ydl.download([req.url])
+    print(f"Finished downloading {name}")
 
 
 class DownloadVideos:
