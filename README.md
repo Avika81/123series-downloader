@@ -15,4 +15,4 @@
 ## requirements:
 
 - `pip install -r requirements.txt`
-- `Install ffmpeg` (`sudo apt install ffmpeg` or your favorite otherway)
+- `Install ffmpeg` 
