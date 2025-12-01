@@ -3,13 +3,12 @@ from pathlib import Path
 import ffsubsync
 import os
 import glob
-from persist_cache.persist_cache import cache
 
 SYNC_EXECUTOR = ThreadPoolExecutor(max_workers=16)
 
 
 def sync_all_series():
-    for base_path in glob.glob(str(Path(__file__).parent / "series" / "*" / "*")):
+    for base_path in glob.glob(str(Path("D:\\") / "series" / "suits" / "*")):
         sync_all_movies(base_path=base_path)
     SYNC_EXECUTOR.shutdown(wait=True)
 
@@ -51,11 +50,17 @@ def sync_all_movies(
         SYNC_EXECUTOR.shutdown(wait=True)
 
 
-@cache
 def _sync_subtitles(subtitles_path, video_path):
     print(f"Synchronizing: {subtitles_path}")
     args = ffsubsync.ffsubsync.make_parser().parse_args(
-        args=["-i", subtitles_path, "--overwrite-input", video_path]
+        args=[
+            "-i",
+            subtitles_path,
+            "--overwrite-input",
+            video_path,
+            "--log-dir-path",
+            ".ffsubsync",
+        ]
     )
     ffsubsync.ffsubsync.run(
         args,
@@ -65,6 +70,6 @@ def _sync_subtitles(subtitles_path, video_path):
 
 
 if __name__ == "__main__":
-    sync_all_movies()
+    # sync_all_movies()
     sync_all_series()
     print("Done, your subtitle are snchronized and perfect (I hope) :)")
