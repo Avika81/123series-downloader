@@ -40,7 +40,7 @@ def download(name: str, req):
     }
 
     print(f"Downloading {name}")
-    with yt_dlp.YoutubeDL(options) as ydl:
+    with yt_dlp.YoutubeDL(options) as ydl:  # type: ignore
         ydl.download([req.url])
     print(f"Finished downloading {name}")
 
@@ -70,6 +70,6 @@ class DownloadVideos:
 
     def wait_for_downloads(self):
         self.input_queue.put(None)
-        self._queue_worker_thread.join()
+        self._queue_worker_thread.join()  # type: ignore
         self.executor.shutdown(wait=True)
         time.sleep(5)
