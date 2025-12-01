@@ -8,7 +8,7 @@ SYNC_EXECUTOR = ThreadPoolExecutor(max_workers=16)
 
 
 def sync_all_series():
-    for base_path in glob.glob(str(Path("D:\\") / "series" / "suits" / "*")):
+    for base_path in glob.glob(str(Path(__file__).parent / "series" / "*" / "*")):
         sync_all_movies(base_path=base_path)
     SYNC_EXECUTOR.shutdown(wait=True)
 
