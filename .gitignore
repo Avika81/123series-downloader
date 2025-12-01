@@ -6,3 +6,4 @@ my_series.py
 *.pyc
 .vscode
 .persist_cache
+.ffsubsync
