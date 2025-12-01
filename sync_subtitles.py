@@ -70,6 +70,6 @@ def _sync_subtitles(subtitles_path, video_path):
 
 
 if __name__ == "__main__":
-    # sync_all_movies()
+    sync_all_movies()
     sync_all_series()
     print("Done, your subtitle are snchronized and perfect (I hope) :)")
