@@ -3,6 +3,7 @@ from pathlib import Path
 import ffsubsync
 import os
 import glob
+from persist_cache.persist_cache import cache
 
 SYNC_EXECUTOR = ThreadPoolExecutor(max_workers=16)
 
@@ -50,6 +51,7 @@ def sync_all_movies(
         SYNC_EXECUTOR.shutdown(wait=True)
 
 
+@cache
 def _sync_subtitles(subtitles_path, video_path):
     print(f"Synchronizing: {subtitles_path}")
     args = ffsubsync.ffsubsync.make_parser().parse_args(
