@@ -84,6 +84,21 @@ class GetDownloadLink:
         if there are subtitles also _get_subtitles_new_site.
     """
 
+    def _get_download_link_9animetv(self, url) -> seleniumwire.request.Request:
+        print("Getting link from 9animetv")
+        self.driver.get(url)
+        return self.driver.wait_for_request(
+            "index-f2-v1-a1.m3u8",
+            timeout=15,
+        )
+
+    def _get_subtitles_9animetv(self, url) -> Optional[str]:
+        self.driver.get(url)
+        return self.driver.wait_for_request(
+            "eng.*\\.vtt",
+            timeout=15,
+        ).url
+
     def _get_download_link_gomovie123(self, url) -> seleniumwire.request.Request:
         print("Getting link from gomovie123")
         self.driver.get(url)
