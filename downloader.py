@@ -40,9 +40,14 @@ def download(name: str, req):
     }
 
     print(f"Downloading {name}")
-    with yt_dlp.YoutubeDL(options) as ydl:  # type: ignore
-        ydl.download([req.url])
-    print(f"Finished downloading {name}")
+    try:
+        with yt_dlp.YoutubeDL(options) as ydl:  # type: ignore
+            return ydl.download([req.url])
+    except:
+        print("Got an error with non-native, reverting to native")
+        options["hls_prefer_native"] = True
+        with yt_dlp.YoutubeDL(options) as ydl:  # type: ignore
+            return ydl.download([req.url])
 
 
 class DownloadVideos:
