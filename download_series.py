@@ -12,34 +12,32 @@ MAX_EPISODE = 400
 MAX_SEASON = 30
 
 
-def get_filename(serie, season, episode, extension="mp4"):
-    name = (
-        Path(__file__).parent
-        / "series"
-        / serie.human_name
-        / f"{season:02}"
-        / f"{season:02}-{episode:02}.{extension}"
-    )
-    if not name.parent.exists():
-        name.parent.mkdir(parents=True)
-    return name
-
-
 class SerieDownloader:
     def __init__(self, serie):
         self.gvl = GetDownloadLink()
         self.dvs = DownloadVideos()
         self.serie = serie
 
-    def download_subtitles(self, season, episode):
-        name = get_filename(
-            serie=self.serie, season=season, episode=episode, extension="vtt"
+    def get_filename(self, season, episode, extension="mp4"):
+        name = (
+            Path(__file__).parent
+            / "series"
+            / self.serie.human_name
+            / f"{season:02}"
+            / f"{season:02}-{episode:02}.{extension}"
         )
+        if not name.parent.exists():
+            name.parent.mkdir(parents=True)
+        return name
+
+    def get_episode_link(self, season, episode):
+        return URL_TEMPLATE.format(name=self.serie.name, season=season, episode=episode)
+
+    def download_subtitles(self, season, episode):
+        name = self.get_filename(season=season, episode=episode, extension="vtt")
         if not name.exists():
             subtitles_link = self.gvl.get_subtitles_link(
-                URL_TEMPLATE.format(
-                    name=self.serie.name, season=season, episode=episode
-                )
+                self.get_episode_link(season, episode)
             )
             if subtitles_link:
                 async_download_file_from_url(subtitles_link, name)
@@ -49,18 +47,14 @@ class SerieDownloader:
                 )
 
     def download_episode(self, season, episode):
-        name = get_filename(serie=self.serie, season=season, episode=episode)
+        name = self.get_filename(season=season, episode=episode)
         if name.exists():
             # No need to download twice
             return
         self.dvs.add(
             (
                 name,
-                self.gvl.get_download_link(
-                    URL_TEMPLATE.format(
-                        name=self.serie.name, season=season, episode=episode
-                    )
-                ),
+                self.gvl.get_download_link(self.get_episode_link(season, episode)),
             )
         )
         print(f"Added: {self.serie.human_name} - {season}:{episode}")
