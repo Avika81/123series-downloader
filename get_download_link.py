@@ -65,6 +65,9 @@ class GetDownloadLink:
         raise DownloadLinkDoesNotExist(f"The site - {url} is unknown")
 
     def get_subtitles_link(self, url) -> Optional[str]:
+        del self.driver.requests
+        print(f"Downloading subtitles from {self._site_name(url)}")
+
         # For example, calls "__get_url_123series(url), if none exists for site returns none."
         return getattr(
             self, f"_get_subtitles_{self._site_name(url)}", lambda url: None
@@ -72,6 +75,7 @@ class GetDownloadLink:
 
     def get_download_link(self, url) -> seleniumwire.request.Request:
         del self.driver.requests  # clean old requests.
+        print(f"Getting link from {self._site_name(url)}")
         return getattr(
             self,
             f"_get_download_link_{self._site_name(url)}",
@@ -85,7 +89,6 @@ class GetDownloadLink:
     """
 
     def _get_download_link_9animetv(self, url) -> seleniumwire.request.Request:
-        print("Getting link from 9animetv")
         self.driver.get(url)
         return self.driver.wait_for_request(
             "index-f2-v1-a1.m3u8",
@@ -100,7 +103,6 @@ class GetDownloadLink:
         ).url
 
     def _get_download_link_gomovie123(self, url) -> seleniumwire.request.Request:
-        print("Getting link from gomovie123")
         self.driver.get(url)
         time.sleep(5)
         self.driver.find_elements(By.ID, "cover")[0].click()

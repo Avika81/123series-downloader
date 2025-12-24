@@ -6,31 +6,19 @@ from downloader import async_download_file_from_url
 from get_download_link import DownloadLinkDoesNotExist
 from my_series import *
 
-name = "one-piece-100"
-URL_TEMPLATE = "https://9animetv.to/watch//{name}?ep={episode_number}"
+URL_TEMPLATE = "https://9animetv.to/watch/{name}?ep={episode}"
 START = 1000
 END = 1200
-
-
-def get_filename(serie, season, episode, extension="mp4"):
-    name = (
-        Path(__file__).parent
-        / "series"
-        / serie.human_name
-        / f"{season:02}"
-        / f"{season:02}-{episode:02}.{extension}"
-    )
-    if not name.parent.exists():
-        name.parent.mkdir(parents=True)
-    return name
 
 
 class AnimmeDownloader(SerieDownloader):
     def __init__(self, serie):
         super().__init__(serie=serie)
         self._episode_to_link = {}
-        self.gvl.driver.get(url="https://9animetv.to/watch/one-piece-100")
-        for i in range(1, 13):
+        self.gvl.driver.get(
+            url=URL_TEMPLATE.split("?ep=")[0].format(name=self.serie.name)
+        )
+        for i in range(1, int(END / 100) + 1):
             episodes_page = self.gvl.driver.find_element(By.ID, f"episodes-page-{i}")
             for n, episode in enumerate(episodes_page.children()):  # type: ignore
                 self._episode_to_link[(i - 1) * 100 + n + 1] = episode.get_property(
@@ -45,22 +33,16 @@ class AnimmeDownloader(SerieDownloader):
             Path(__file__).parent
             / "series"
             / self.serie.human_name
-            / f"{episode:02}.{extension}"
+            / f"{episode}.{extension}"
         )
         if not name.parent.exists():
             name.parent.mkdir(parents=True)
         return name
 
     def download_subtitles(self, season, episode):
-        name = get_filename(
-            serie=self.serie, season=season, episode=episode, extension="vtt"
-        )
+        name = self.get_filename(season=season, episode=episode, extension="vtt")
         if not name.exists():
-            subtitles_link = self.gvl.get_subtitles_link(
-                URL_TEMPLATE.format(
-                    name=self.serie.name, season=season, episode=episode
-                )
-            )
+            subtitles_link = self.gvl.get_subtitles_link(self._episode_to_link[episode])
             if subtitles_link:
                 async_download_file_from_url(subtitles_link, name)
             else:
@@ -69,19 +51,12 @@ class AnimmeDownloader(SerieDownloader):
                 )
 
     def download_episode(self, season, episode):
-        name = get_filename(serie=self.serie, season=season, episode=episode)
+        name = self.get_filename(season=season, episode=episode)
         if name.exists():
             # No need to download twice
             return
         self.dvs.add(
-            (
-                name,
-                self.gvl.get_download_link(
-                    URL_TEMPLATE.format(
-                        name=self.serie.name, season=season, episode=episode
-                    )
-                ),
-            )
+            (name, self.gvl.get_download_link(self._episode_to_link[episode])),
         )
         print(f"Added: {self.serie.human_name} - {season}:{episode}")
 
@@ -99,7 +74,7 @@ class AnimmeDownloader(SerieDownloader):
                 return self.exit()
             except Exception as e:
                 print(
-                    f"AAAAAAAAAAAAAAAAA: did not found a link for {self.serie.human_name}"
+                    f"AAAAAAAAAAAAAAAAA: did not found a link for {self.serie.human_name} - {episode}, exception: {str(e)"
                 )
                 continue
         return self.exit()
