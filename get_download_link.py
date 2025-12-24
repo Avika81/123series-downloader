@@ -33,6 +33,7 @@ class GetDownloadLink:
         logging.getLogger("seleniumwire").setLevel(logging.WARNING)
         options.add_argument("--ignore-certificate-errors")
 
+        self._kill_old_webdrivers()
         self.driver = webdriver.Chrome(
             service=Service(ChromeDriverManager().install()), options=options
         )
@@ -44,11 +45,13 @@ class GetDownloadLink:
                 "taskkill /F /IM chromedriver.exe /T",
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                shell=True,
             )
             subprocess.call(
                 "taskkill /F /IM chrome.exe /T",
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                shell=True,
             )
 
     def _wait_for_download_url(self) -> seleniumwire.request.Request:
@@ -66,7 +69,7 @@ class GetDownloadLink:
 
     def get_subtitles_link(self, url) -> Optional[str]:
         del self.driver.requests
-        print(f"Downloading subtitles from {self._site_name(url)}")
+        print(f"Getting subtitles from {self._site_name(url)}")
 
         # For example, calls "__get_url_123series(url), if none exists for site returns none."
         return getattr(
@@ -91,16 +94,25 @@ class GetDownloadLink:
     def _get_download_link_9animetv(self, url) -> seleniumwire.request.Request:
         self.driver.get(url)
         return self.driver.wait_for_request(
-            "index-f2-v1-a1.m3u8",
+            "index-f[12]-v1-a1.m3u8",
             timeout=15,
         )
 
     def _get_subtitles_9animetv(self, url) -> Optional[str]:
         self.driver.get(url)
-        return self.driver.wait_for_request(
-            "eng.*\\.vtt",
-            timeout=15,
-        ).url
+        try:
+            return self.driver.wait_for_request(
+                "eng.*\\.vtt",
+                timeout=15,
+            ).url
+        except TimeoutException:
+            print(
+                "Did not found explicit english for {url}, downloading the first it is usually english ;)"
+            )
+            return self.driver.wait_for_request(
+                "\\.vtt",
+                timeout=1,
+            ).url
 
     def _get_download_link_gomovie123(self, url) -> seleniumwire.request.Request:
         self.driver.get(url)

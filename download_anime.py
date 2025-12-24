@@ -1,13 +1,15 @@
 from pathlib import Path
-from selenium.common.exceptions import NoSuchWindowException
+import time
+from selenium.common.exceptions import NoSuchWindowException, TimeoutException
 from selenium.webdriver.common.by import By
 from download_series import SerieDownloader
 from downloader import async_download_file_from_url
-from get_download_link import DownloadLinkDoesNotExist
+from get_download_link import DownloadLinkDoesNotExist, GetDownloadLink
 from my_series import *
+from urllib3.exceptions import ReadTimeoutError
 
 URL_TEMPLATE = "https://9animetv.to/watch/{name}?ep={episode}"
-START = 1000
+START = 1001
 END = 1200
 
 
@@ -62,21 +64,41 @@ class AnimmeDownloader(SerieDownloader):
 
     def download_all(self):
         for episode in range(START, END):
-            try:
-                self.download_subtitles(episode=episode, season=None)
-                self.download_episode(episode=episode, season=None)
-            except DownloadLinkDoesNotExist:
-                if episode == 1:
+            for _ in range(3):
+                try:
+                    self.download_subtitles(episode=episode, season=None)
+                    self.download_episode(episode=episode, season=None)
+
+                    continue
+                except DownloadLinkDoesNotExist:
+                    if episode == 1:
+                        return self.exit()
+                    break
+                except NoSuchWindowException:
+                    print("An error accured")
                     return self.exit()
-                break
-            except NoSuchWindowException:
-                print("An error accured")
-                return self.exit()
-            except Exception as e:
-                print(
-                    f"AAAAAAAAAAAAAAAAA: did not found a link for {self.serie.human_name} - {episode}, exception: {str(e)}"
-                )
-                continue
+                except TimeoutException as e:
+                    print(
+                        f"Received timeout for {self.serie.human_name} - {episode}, exception: {str(e)}"
+                    )
+                    print("Retrying:")
+                    time.sleep(15)
+                    self.gvl = GetDownloadLink()
+                    continue
+
+                except ReadTimeoutError as e:
+                    print("Issue with the driver, reloading it and retrying.")
+                    self.gvl = GetDownloadLink()
+                    continue
+
+                except Exception as e:
+                    print(
+                        f"AAAAAAAAAAAAAAAAA: did not found a link for {self.serie.human_name} - {episode}, exception: {str(e)}"
+                    )
+                    import IPython
+
+                    IPython.embed()
+
         return self.exit()
 
     def exit(self):
