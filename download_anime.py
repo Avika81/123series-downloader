@@ -74,7 +74,7 @@ class AnimmeDownloader(SerieDownloader):
                 return self.exit()
             except Exception as e:
                 print(
-                    f"AAAAAAAAAAAAAAAAA: did not found a link for {self.serie.human_name} - {episode}, exception: {str(e)"
+                    f"AAAAAAAAAAAAAAAAA: did not found a link for {self.serie.human_name} - {episode}, exception: {str(e)}"
                 )
                 continue
         return self.exit()
