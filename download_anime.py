@@ -10,7 +10,7 @@ from urllib3.exceptions import ReadTimeoutError
 
 URL_TEMPLATE = "https://9animetv.to/watch/{name}?ep={episode}"
 START = 1001
-END = 1200
+END = 1155
 
 
 class AnimmeDownloader(SerieDownloader):
