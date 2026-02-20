@@ -164,5 +164,7 @@ class GetDownloadLink:
         try:
             return self._wait_for_download_url()
         except TimeoutException:
-            print(f"Error downloading: {url}, Checing if other server works :/")
+            print(
+                f"Error downloading from default: {url}, Checking if other server works :/"
+            )
             return self.__try_all_servers_123series(url)
