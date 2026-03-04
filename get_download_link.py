@@ -35,7 +35,9 @@ class GetDownloadLink:
 
         self._kill_old_webdrivers()
         self.driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()), options=options
+            version_main=145,
+            options=options,
+            service=Service(ChromeDriverManager().install()),
         )
         print("Started webdriver.")
 
