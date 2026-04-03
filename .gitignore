@@ -7,3 +7,4 @@ my_series.py
 .vscode
 .persist_cache
 .ffsubsync
+subsource_account.py
