@@ -41,14 +41,15 @@ def sync_all_movies(
             video_path = os.path.join(base_path, video_file)
             subtitles_path = os.path.join(base_path, subtitles_file)
             if subtitles_file in files:
-                SYNC_EXECUTOR.submit(
-                    lambda: sync_one(
-                        subtitles_path=subtitles_path, video_path=video_path
-                    )
-                )
+                sync_one(subtitles_path=subtitles_path, video_path=video_path)
+                # SYNC_EXECUTOR.submit(
+                #     lambda: sync_one(
+                #         subtitles_path=subtitles_path, video_path=video_path
+                #     )
+                # )
     if shutdown_executor:
         print("Your subtitle are synchronized and perfect (I hope) :)")
-        SYNC_EXECUTOR.shutdown(wait=True)
+        # SYNC_EXECUTOR.shutdown(wait=True)
 
 
 @cache
