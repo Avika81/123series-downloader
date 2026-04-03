@@ -26,15 +26,15 @@ class DidNotFindDownloadLink(Exception):
     pass
 
 
-class GetDownloadLink:
-    def __init__(self):
+class WebDriver(webdriver.Chrome):
+    def __init__(self) -> None:
+        self._kill_old_webdrivers()
         options = Options()
         options.add_argument("--headless=new")
         logging.getLogger("seleniumwire").setLevel(logging.WARNING)
         options.add_argument("--ignore-certificate-errors")
 
-        self._kill_old_webdrivers()
-        self.driver = webdriver.Chrome(
+        super(WebDriver, self).__init__(
             version_main=145,
             options=options,
             service=Service(ChromeDriverManager().install()),
@@ -55,6 +55,11 @@ class GetDownloadLink:
                 stderr=subprocess.DEVNULL,
                 shell=True,
             )
+
+
+class GetDownloadLink:
+    def __init__(self):
+        self.driver = WebDriver()
 
     def _wait_for_download_url(self) -> seleniumwire.request.Request:
         return self.driver.wait_for_request(
