@@ -126,5 +126,5 @@ if __name__ == "__main__":
         download_subtitles_for_movie(f)
 
     # download for a serie:
-    for season in range(1, 3):
-        download_subtitles_for_season("silo", season=season)
+    for season in range(1, 20):
+        download_subtitles_for_season("family guy", season=season)
