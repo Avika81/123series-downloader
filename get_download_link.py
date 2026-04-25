@@ -35,7 +35,7 @@ class WebDriver(webdriver.Chrome):
         options.add_argument("--ignore-certificate-errors")
 
         super(WebDriver, self).__init__(
-            version_main=145,
+            version_main=147,
             options=options,
             service=Service(ChromeDriverManager().install()),
         )
@@ -133,6 +133,8 @@ class GetDownloadLink:
             raise DownloadLinkDoesNotExist(f"{url} has no presentation of video :/")
 
     def _get_subtitles_123series(self, url) -> Optional[str]:
+        return
+        #TODO: implement (they removed it from the site, it is inside the videos :/)
         self.__get_url_123series(url)
         time.sleep(5)  # need the subtitles to load properly...
         subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
