@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 import requests
 from download_movies import MOVIES_PATH
 from subsource_account import API_KEY
@@ -19,7 +20,11 @@ def __request(api, params={}):
 
 def _request(api, params={}) -> dict:
     response = __request(api, params=params).json()
-    if not response["success"]:
+    if "success" not in response or not response["success"]:
+        if response["message"] == "Rate limit exceeded. Please try again later.":
+            time.sleep(response["retryAfter"])
+            return _request(api, params)
+
         print("Got error from subsource.net, debugging...")
         import IPython
 
@@ -127,4 +132,4 @@ if __name__ == "__main__":
 
     # download for a serie:
     for season in range(1, 20):
-        download_subtitles_for_season("family guy", season=season)
+        download_subtitles_for_season("friends", season=season)
