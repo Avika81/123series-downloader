@@ -84,9 +84,8 @@ class SerieDownloader:
 
 
 def main():
-    for _ in range(3):
-        for serie in SERIES:
-            SerieDownloader(serie).download_all()
+    for serie in SERIES:
+        SerieDownloader(serie).download_all()
     sync_all_series()
 
 
