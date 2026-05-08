@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-## This code is AI generated, actually (almost) worked on first try!
 
 import concurrent.futures
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -12,8 +12,7 @@ from tqdm import tqdm
 # CONFIG
 # ============================================
 
-# Change this if you want a different directory
-ROOT_DIRECTORY = Path(".")  # current directory
+ROOT_DIRECTORY = Path(".")
 
 VIDEO_EXTENSIONS = {
     ".mp4",
@@ -30,11 +29,10 @@ VIDEO_EXTENSIONS = {
     ".3gp",
 }
 
-MAX_WORKERS = 8  # os.cpu_count()
+MAX_WORKERS = os.cpu_count()
 
-# Black screen detection settings
-BLACK_THRESHOLD = 0.98
-BLACK_MIN_DURATION = 5
+# How many frames to sample total
+SAMPLED_FRAMES = 3
 
 # ============================================
 
@@ -43,50 +41,71 @@ def is_video_file(path: Path) -> bool:
     return path.suffix.lower() in VIDEO_EXTENSIONS
 
 
-def ffprobe_streams(video_path: Path):
+def ffprobe_check(video_path: Path):
     """
-    Verify that ffprobe can read the video metadata/streams.
+    Extremely fast metadata/container validation.
     """
+
     cmd = [
         "ffprobe",
         "-v",
         "error",
-        "-show_streams",
-        "-show_format",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=codec_name,width,height",
+        "-show_entries",
+        "format=duration",
         "-of",
         "json",
         str(video_path),
     ]
 
     result = subprocess.run(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
     )
 
     if result.returncode != 0:
-        return False, f"ffprobe failed: {result.stderr.strip()}"
+        return False, "ffprobe failed"
 
     try:
         data = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        return False, "Invalid ffprobe JSON output"
+    except Exception:
+        return False, "Invalid metadata"
 
     streams = data.get("streams", [])
-    video_streams = [s for s in streams if s.get("codec_type") == "video"]
 
-    if not video_streams:
-        return False, "No video stream found"
+    if not streams:
+        return False, "No video stream"
 
     return True, None
 
 
-def ffmpeg_decode_check(video_path: Path):
+def quick_decode_check(video_path: Path):
     """
-    Fully decode the video and fail on corruption/errors.
+    Decode only a VERY small sample of frames.
+
+    This catches most broken/corrupt videos while remaining fast.
     """
-    cmd = ["ffmpeg", "-v", "error", "-xerror", "-i", str(video_path), "-f", "null", "-"]
+
+    cmd = [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-hwaccel",
+        "auto",
+        "-i",
+        str(video_path),
+        # only decode a few frames
+        "-frames:v",
+        str(SAMPLED_FRAMES),
+        "-f",
+        "null",
+        "-",
+    ]
 
     result = subprocess.run(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True
     )
 
     if result.returncode != 0:
@@ -95,52 +114,21 @@ def ffmpeg_decode_check(video_path: Path):
     return True, None
 
 
-def blackscreen_check(video_path: Path):
-    """
-    Detect long black sections using ffmpeg blackdetect.
-    """
-    cmd = [
-        "ffmpeg",
-        "-hide_banner",
-        "-i",
-        str(video_path),
-        "-vf",
-        f"blackdetect=d={BLACK_MIN_DURATION}:pic_th={BLACK_THRESHOLD}",
-        "-an",
-        "-f",
-        "null",
-        "-",
-    ]
-
-    result = subprocess.run(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-    )
-
-    stderr = result.stderr.lower()
-
-    if "black_start" in stderr:
-        return False, "Contains long black screen"
-
-    return True, None
-
-
 def validate_video(video_path: Path):
     errors = []
 
-    ok, err = ffprobe_streams(video_path)
+    ok, err = ffprobe_check(video_path)
+
     if not ok:
         errors.append(err)
-        return video_path, errors
+        return str(video_path), errors
 
-    ok, err = ffmpeg_decode_check(video_path)
-    if not ok:
-        errors.append(err)
+    ok, err = quick_decode_check(video_path)
 
-    ok, err = blackscreen_check(video_path)
     if not ok:
         errors.append(err)
 
-    return video_path, errors
+    return str(video_path), errors
 
 
 def find_videos(root_dir: Path):
@@ -156,17 +144,19 @@ def main():
         print("No video files found.")
         return
 
-    print(f"Found {len(videos)} video files")
+    print(f"Found {len(videos)} videos")
+    print(f"Using {MAX_WORKERS} workers\n")
 
     invalid_videos = []
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    # ProcessPool is faster for ffmpeg-heavy workloads
+    with concurrent.futures.ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
 
-        futures = [executor.submit(validate_video, video) for video in videos]
+        results = executor.map(validate_video, videos)
 
-        with tqdm(total=len(futures), desc="Checking videos") as pbar:
-            for future in concurrent.futures.as_completed(futures):
-                video_path, errors = future.result()
+        with tqdm(total=len(videos), desc="Checking", unit="video") as pbar:
+
+            for video_path, errors in results:
 
                 if errors:
                     invalid_videos.append((video_path, errors))
@@ -184,6 +174,7 @@ def main():
 
         for path, errors in invalid_videos:
             print(path)
+
             for err in errors:
                 print(f"    - {err}")
 
