@@ -55,10 +55,16 @@ def download_subtitles(movie_id: int) -> bytes:
     raise RuntimeError(f"Did not find a matching subtitles for id {movie_id}")
 
 
-def search_movie(name: str, season=1) -> int:
-    response = _request(
-        api="movies/search", params={"searchType": "text", "q": name, "season": season}
-    )
+def search_movie(name: str, season=-1) -> int:
+    if season != -1:
+        response = _request(
+            api="movies/search",
+            params={"searchType": "text", "q": name, "season": season},
+        )
+    else:
+        response = _request(
+            api="movies/search", params={"searchType": "text", "q": name}
+        )
 
     for movie in response:
         if (
@@ -131,5 +137,5 @@ if __name__ == "__main__":
         download_subtitles_for_movie(f)
 
     # download for a serie:
-    for season in range(1, 20):
-        download_subtitles_for_season("friends", season=season)
+    # for season in range(1, 20):
+    #     download_subtitles_for_season("friends", season=season)
