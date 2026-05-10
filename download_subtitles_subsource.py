@@ -131,11 +131,15 @@ def download_subtitles_for_season(serie_name, season):
                     print(e)
 
 
-if __name__ == "__main__":
+def download_missing_subtitles_for_movies():
     # download for all movies:
     for f in MOVIES_PATH.iterdir():
         download_subtitles_for_movie(f)
 
+
+if __name__ == "__main__":
+    download_missing_subtitles_for_movies()
+
     # download for a serie:
-    # for season in range(1, 20):
-    #     download_subtitles_for_season("friends", season=season)
+    for season in range(1, 20):
+        download_subtitles_for_season("how I met your mother", season=season)
