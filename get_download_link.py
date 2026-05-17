@@ -85,7 +85,7 @@ class GetDownloadLink:
 
     def get_download_link(self, url) -> seleniumwire.request.Request:
         del self.driver.requests  # clean old requests.
-        print(f"Getting link from {self._site_name(url)}")
+        print(f"Getting link from {url} - {self._site_name(url)}")
         return getattr(
             self,
             f"_get_download_link_{self._site_name(url)}",
@@ -134,7 +134,7 @@ class GetDownloadLink:
 
     def _get_subtitles_123series(self, url) -> Optional[str]:
         return
-        #TODO: implement (they removed it from the site, it is inside the videos :/)
+        # TODO: implement (they removed it from the site, it is inside the videos :/)
         self.__get_url_123series(url)
         time.sleep(5)  # need the subtitles to load properly...
         subtitles_dropdown = self.driver.find_elements(By.ID, "subtitles-dropdown")[0]
